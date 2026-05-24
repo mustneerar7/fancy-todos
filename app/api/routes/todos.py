@@ -5,7 +5,15 @@ from sqlmodel import Session
 
 from app import crud
 from app.api.deps import CurrentUser, SessionDep
-from app.models import Message, Todo, TodoCreate, TodoPublic, TodosPublic, TodoUpdate, User
+from app.models import (
+    Message,
+    Todo,
+    TodoCreate,
+    TodoPublic,
+    TodosPublic,
+    TodoUpdate,
+    User,
+)
 
 router = APIRouter(prefix="/todos", tags=["todos"])
 

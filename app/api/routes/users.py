@@ -18,7 +18,11 @@ from app.models import (
 router = APIRouter(prefix="/users", tags=["users"])
 
 
-@router.get("/", dependencies=[Depends(get_current_active_superuser)], response_model=UsersPublic)
+@router.get(
+    "/",
+    dependencies=[Depends(get_current_active_superuser)],
+    response_model=UsersPublic,
+)
 def read_users(session: SessionDep, skip: int = 0, limit: int = 100):
     count = session.exec(select(func.count()).select_from(User)).one()
     users = session.exec(select(User).offset(skip).limit(limit)).all()
@@ -31,7 +35,9 @@ def read_users(session: SessionDep, skip: int = 0, limit: int = 100):
 def create_user(*, session: SessionDep, user_in: UserCreate):
     user = crud.user.get_by_email(session=session, email=user_in.email)
     if user:
-        raise HTTPException(status_code=400, detail="User with this email already exists")
+        raise HTTPException(
+            status_code=400, detail="User with this email already exists"
+        )
     return crud.user.create(session=session, user_create=user_in)
 
 
@@ -39,7 +45,9 @@ def create_user(*, session: SessionDep, user_in: UserCreate):
 def register_user(session: SessionDep, user_in: UserRegister):
     user = crud.user.get_by_email(session=session, email=user_in.email)
     if user:
-        raise HTTPException(status_code=400, detail="User with this email already exists")
+        raise HTTPException(
+            status_code=400, detail="User with this email already exists"
+        )
     user_create = UserCreate.model_validate(user_in)
     return crud.user.create(session=session, user_create=user_create)
 
@@ -50,11 +58,15 @@ def read_user_me(current_user: CurrentUser):
 
 
 @router.patch("/me", response_model=UserPublic)
-def update_user_me(*, session: SessionDep, user_in: UserUpdate, current_user: CurrentUser):
+def update_user_me(
+    *, session: SessionDep, user_in: UserUpdate, current_user: CurrentUser
+):
     if user_in.email and user_in.email != current_user.email:
         existing = crud.user.get_by_email(session=session, email=user_in.email)
         if existing:
-            raise HTTPException(status_code=409, detail="User with this email already exists")
+            raise HTTPException(
+                status_code=409, detail="User with this email already exists"
+            )
     return crud.user.update(session=session, db_user=current_user, user_in=user_in)
 
 
@@ -69,7 +81,9 @@ def read_user(user_id: uuid.UUID, session: SessionDep, current_user: CurrentUser
 
 
 @router.delete(
-    "/{user_id}", dependencies=[Depends(get_current_active_superuser)], response_model=Message
+    "/{user_id}",
+    dependencies=[Depends(get_current_active_superuser)],
+    response_model=Message,
 )
 def delete_user(session: SessionDep, user_id: uuid.UUID):
     user = session.get(User, user_id)

@@ -23,17 +23,16 @@ cp .env.example .env
 # 3. start Postgres
 docker compose up -d
 
-# 4. apply migrations
-uv run alembic upgrade head
-
-# 5. (optional) seed the first superuser from .env
-uv run python -c "from sqlmodel import Session; from app.core.db import engine, init_db; init_db(Session(engine))"
+# 4. apply migrations and seed the first superuser
+make prestart
 ```
+
+Run `make help` to see all available targets.
 
 ## Running the dev server
 
 ```bash
-uv run fastapi dev app/main.py
+make dev
 ```
 
 The API is served at `http://127.0.0.1:8000` under the prefix `/api/v1`. The server auto-reloads on file changes.
@@ -59,18 +58,17 @@ After changing or adding a model in [app/models/](app/models/):
 
 ```bash
 # generate a new migration from the diff between models and DB
-uv run alembic revision --autogenerate -m "describe the change"
+make migrate m="describe the change"
 
 # review the generated file in app/alembic/versions/, then apply
-uv run alembic upgrade head
+make upgrade
 ```
 
-Other useful commands:
+## Code quality
 
 ```bash
-uv run alembic current        # which revision is applied
-uv run alembic history        # full revision history
-uv run alembic downgrade -1   # roll back one revision
+make format    # auto-fix lint issues and format
+make lint      # check only — used by CI
 ```
 
 ## Project layout

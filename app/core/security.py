@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import bcrypt
@@ -9,10 +9,12 @@ from app.core.config import settings
 ALGORITHM = "HS256"
 
 
-def create_access_token(subject: str | Any, expires_delta: timedelta | None = None) -> str:
+def create_access_token(
+    subject: str | Any, expires_delta: timedelta | None = None
+) -> str:
     if expires_delta is None:
         expires_delta = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    expire = datetime.now(timezone.utc) + expires_delta
+    expire = datetime.now(UTC) + expires_delta
     payload = {"exp": expire, "sub": str(subject)}
     return jwt.encode(payload, settings.SECRET_KEY, algorithm=ALGORITHM)
 
