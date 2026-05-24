@@ -1,10 +1,8 @@
 from fastapi import FastAPI
 
-from app.internal import admin
-from app.routers import items, users
+from app.api.main import api_router
+from app.core.config import settings
 
-app = FastAPI()
+app = FastAPI(title=settings.PROJECT_NAME, openapi_url=f"{settings.API_V1_STR}/openapi.json")
 
-app.include_router(users.router)
-app.include_router(items.router)
-app.include_router(admin.router, prefix="/admin", tags=["admin"])
+app.include_router(api_router, prefix=settings.API_V1_STR)
