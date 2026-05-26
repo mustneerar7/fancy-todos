@@ -3,6 +3,8 @@ from typing import TYPE_CHECKING
 
 from sqlmodel import Field, Relationship, SQLModel
 
+from app.models.common import TimestampMixin
+
 if TYPE_CHECKING:
     from app.models.user import User
 
@@ -32,7 +34,7 @@ class TodoUpdate(SQLModel):
     is_completed: bool | None = None
 
 
-class Todo(TodoBase, table=True):
+class Todo(TodoBase, TimestampMixin, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     owner_id: uuid.UUID = Field(
         foreign_key="user.id", nullable=False, ondelete="CASCADE"
@@ -40,7 +42,7 @@ class Todo(TodoBase, table=True):
     owner: "User" = Relationship(back_populates="todos")
 
 
-class TodoPublic(TodoBase):
+class TodoPublic(TodoBase, TimestampMixin):
     id: uuid.UUID
     owner_id: uuid.UUID
 
