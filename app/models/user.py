@@ -4,6 +4,8 @@ from typing import TYPE_CHECKING
 from pydantic import EmailStr
 from sqlmodel import Field, Relationship, SQLModel
 
+from app.models.common import TimestampMixin
+
 if TYPE_CHECKING:
     from app.models.todo import Todo
 
@@ -43,13 +45,13 @@ class UserUpdate(SQLModel):
     is_superuser: bool | None = None
 
 
-class User(UserBase, table=True):
+class User(UserBase, TimestampMixin, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     hashed_password: str
     todos: list["Todo"] = Relationship(back_populates="owner", cascade_delete=True)
 
 
-class UserPublic(UserBase):
+class UserPublic(UserBase, TimestampMixin):
     id: uuid.UUID
 
 
