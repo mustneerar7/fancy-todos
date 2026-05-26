@@ -89,6 +89,16 @@ app/
 └── alembic/               # migrations
 ```
 
+## Using as a template
+
+To spin up a new project from this one:
+
+```bash
+./scripts/new-project.sh <new-name> <destination-dir>
+```
+
+This copies the repo (skipping `.git`, `.venv`, caches, and `.env`), rewrites the project name in `pyproject.toml`, `README.md`, and `.env.example`, and initializes a fresh git repo with a single commit on `main`.
+
 ## Stopping
 
 ```bash
