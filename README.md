@@ -1,29 +1,15 @@
 # fancy-todos
 
-FastAPI + SQLModel + Postgres + Alembic. Auth via JWT.
-
-## Prerequisites
-
-- [uv](https://docs.astral.sh/uv/) (Python package manager)
-- Docker (for Postgres)
+Simplified starter app using FastAPI + SQLModel + Postgres + Alembic. Auth via JWT.
 
 ## First-time setup
 
 ```bash
-# 1. install deps into a local .venv
 uv sync
 
-# 2. copy the env template and edit secrets
 cp .env.example .env
-# open .env and set at minimum:
-#   SECRET_KEY              (generate: openssl rand -hex 32)
-#   FIRST_SUPERUSER_EMAIL
-#   FIRST_SUPERUSER_PASSWORD
-
-# 3. start Postgres
 docker compose up -d
 
-# 4. apply migrations and seed the first superuser
 make prestart
 ```
 
@@ -45,22 +31,15 @@ FastAPI ships an interactive API explorer. With the dev server running, open:
 - **ReDoc**: http://127.0.0.1:8000/redoc
 - **OpenAPI schema (JSON)**: http://127.0.0.1:8000/api/v1/openapi.json
 
-Typical flow in Swagger:
-
-1. `POST /api/v1/users/signup` — create a user.
-2. `POST /api/v1/login/access-token` — log in (form fields: `username` = email, `password`). Copy the `access_token`.
-3. Click the **Authorize** button (top right), paste the token, hit Authorize. All subsequent calls will include the bearer header.
-4. Try `GET /api/v1/users/me`, `POST /api/v1/todos/`, `GET /api/v1/todos/`, etc.
-
 ## Database migrations
 
 After changing or adding a model in [app/models/](app/models/):
 
 ```bash
-# generate a new migration from the diff between models and DB
+# generate a new migration
 make migrate m="describe the change"
 
-# review the generated file in app/alembic/versions/, then apply
+# updates the database to latest migration
 make upgrade
 ```
 
@@ -75,18 +54,18 @@ make lint      # check only — used by CI
 
 ```
 app/
-├── main.py                # FastAPI app + router mount
+├── main.py
 ├── api/
-│   ├── main.py            # router aggregator
-│   ├── deps.py            # SessionDep, CurrentUser, superuser guard
-│   └── routes/            # login, users, todos, utils
+│   ├── main.py
+│   ├── deps.py
+│   └── routes/
 ├── core/
-│   ├── config.py          # pydantic-settings (.env driven)
-│   ├── db.py              # engine + init_db
-│   └── security.py        # bcrypt + JWT helpers
-├── models/                # SQLModel tables + Pydantic schemas
-├── crud/                  # data access (crud.user.*, crud.todo.*)
-└── alembic/               # migrations
+│   ├── config.py
+│   ├── db.py
+│   └── security.py
+├── models/
+├── crud/
+└── alembic/
 ```
 
 ## Using as a template
@@ -97,12 +76,10 @@ To spin up a new project from this one:
 ./scripts/new-project.sh <new-name> <destination-dir>
 ```
 
-This copies the repo (skipping `.git`, `.venv`, caches, and `.env`), rewrites the project name in `pyproject.toml`, `README.md`, and `.env.example`, and initializes a fresh git repo with a single commit on `main`.
-
 ## Stopping
 
 ```bash
-# stop the dev server: Ctrl+C
-docker compose down          # stop Postgres (keeps volume)
-docker compose down -v       # also wipe the database volume
+docker compose down
+# or
+docker compose down -v
 ```
