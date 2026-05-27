@@ -1,4 +1,4 @@
-.PHONY: help format lint prestart dev migrate upgrade test clean
+.PHONY: help format lint prestart dev start migrate upgrade test
 
 .DEFAULT_GOAL := help
 
@@ -16,6 +16,9 @@ prestart: ## Apply migrations and seed first superuser
 
 dev: ## Run the dev server with auto-reload
 	uv run fastapi dev app/main.py
+
+start: ## Run the production server (no reload, multi-worker) — env: HOST, PORT, WORKERS
+	uv run bash scripts/start.sh
 
 migrate: ## Create a new alembic revision — usage: make migrate m="description"
 	@if [ -z "$(m)" ]; then echo 'usage: make migrate m="description"'; exit 1; fi
