@@ -1,4 +1,4 @@
-.PHONY: help format lint prestart dev migrate upgrade
+.PHONY: help format lint prestart dev migrate upgrade test
 
 .DEFAULT_GOAL := help
 
@@ -23,3 +23,6 @@ migrate: ## Create a new alembic revision — usage: make migrate m="description
 
 upgrade: ## Apply pending migrations
 	uv run alembic upgrade head
+
+test: ## Run the pytest test suite with coverage
+	uv run bash scripts/test.sh
