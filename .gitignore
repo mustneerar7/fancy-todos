@@ -11,4 +11,11 @@ wheels/
 .venv
 
 # Local env
+.vscode
 .env
+
+# Test artifacts
+htmlcov/
+.coverage
+.coverage.*
+.pytest_cache/
