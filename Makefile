@@ -1,4 +1,4 @@
-.PHONY: help format lint prestart dev migrate upgrade test
+.PHONY: help format lint prestart dev migrate upgrade test clean
 
 .DEFAULT_GOAL := help
 
@@ -26,3 +26,6 @@ upgrade: ## Apply pending migrations
 
 test: ## Run the pytest test suite with coverage
 	uv run bash scripts/test.sh
+
+clean: ## Remove Python and tool caches (keeps .venv)
+	bash scripts/clean.sh
