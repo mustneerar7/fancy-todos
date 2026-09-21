@@ -1,0 +1,105 @@
+# Production-style stack: Postgres + the app on a private network.
+#
+# Every value is read from the shell environment (or a .env file next to this
+# file, which Compose loads automatically). Required values have no fallback;
+# Compose refuses to start and names the missing variable.
+#
+#   docker compose -f compose.deploy.yaml up -d --build
+
+name: fancy-todos
+
+
+# =============================================================================
+# STEP 1: Internal network
+#   - A private bridge network that only this stack's containers can join.
+#   - `internal: true` blocks it from reaching the internet; the database is
+#     reachable only through here and never published on the host.
+# =============================================================================
+networks:
+  backend:
+    driver: bridge
+    internal: true
+  # The app also joins this network so its port can be published to the host.
+  edge:
+    driver: bridge
+
+
+# =============================================================================
+# STEP 2: Persistent volume
+#   - A named volume keeps Postgres data between container restarts and upgrades.
+#   - It is separate from the dev volume in docker-compose.yml, so dev data is
+#     not affected.
+# =============================================================================
+volumes:
+  db_data:
+
+
+services:
+
+  # ===========================================================================
+  # STEP 3: Database service
+  #   - Postgres 16 with its user, password and db name taken from the environment.
+  #   - Attached only to the internal network: no `ports:` mapping, so it cannot
+  #     be reached from the host or the outside world.
+  #   - The healthcheck makes the app wait until Postgres accepts connections.
+  # ===========================================================================
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+
+  # ===========================================================================
+  # STEP 4: App service
+  #   - Builds the image from the Dockerfile and starts only after the db is healthy.
+  #   - POSTGRES_SERVER is fixed to `db` (the service name on the internal network).
+  #     Everything else is passed through from the environment.
+  #   - On boot it runs migrations and seeds the superuser, then serves on PORT.
+  # ===========================================================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ${PROJECT_NAME:?PROJECT_NAME is required}:${APP_VERSION:-latest}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PROJECT_NAME: ${PROJECT_NAME}
+      ENVIRONMENT: ${ENVIRONMENT:?ENVIRONMENT is required}
+      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY is required}
+      POSTGRES_SERVER: db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      FIRST_SUPERUSER_EMAIL: ${FIRST_SUPERUSER_EMAIL:?FIRST_SUPERUSER_EMAIL is required}
+      FIRST_SUPERUSER_PASSWORD: ${FIRST_SUPERUSER_PASSWORD:?FIRST_SUPERUSER_PASSWORD is required}
+      PORT: ${APP_PORT:-8000}
+      WORKERS: ${WORKERS:-4}
+    networks:
+      - backend
+      - edge
+
+
+  # ===========================================================================
+  # STEP 5: Publish the app
+  #   - Maps the app's port to the host. This is the only port exposed by the
+  #     whole stack.
+  #   - Bind to 127.0.0.1 via APP_BIND if a reverse proxy sits in front.
+  # ===========================================================================
+    ports:
+      - "${APP_BIND:-0.0.0.0}:${APP_PORT:-8000}:${APP_PORT:-8000}"
